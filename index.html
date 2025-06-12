@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keyboard Layout Usage Analyzer</title>
+  <!-- Fancy serif font -->
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fbf1c7;
+      --fg: #3c3836;
+      --border: #3c3836;
+      --light0: #f2e5bc;
+      --light1: #ebdbb2;
+      --bright-red: #fb4934;
+    }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Merriweather', serif;
+      padding: 20px;
+    }
+    /* Layout: two columns (input + results), responsive */
+    .main { display: flex; gap: 40px; }
+    .input-panel { flex: 1; }
+    .output-panel { flex: 2; }
+    /* grid layout for keyboard sections */
+    #layouts-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    @media (max-width: 800px) {
+      .main { flex-direction: column; }
+    }
+    textarea {
+      width: 100%;
+      margin-bottom: 10px;
+      background: var(--light1);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      color: var(--fg);
+      font-family: inherit;
+    }
+    .layout {
+      background: var(--light0);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+    .layout h2 {
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    h1 {
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .keyboard { }
+    .row { display: flex; margin-bottom: 4px; }
+    .row.second-row { margin-left: 16px; }
+    .row.third-row { margin-left: 32px; }
+    .key { width: 32px; height: 32px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin-right: 4px; position: relative; user-select: none; font-size: 12px; color: var(--fg); }
+    .key .count { position: absolute; bottom: 1px; right: 1px; font-size: 8px; color: var(--fg); }
+  </style>
+</head>
+<body>
+  <h1>Keyboard Layout Usage Analyzer</h1>
+  <div class="main">
+    <div class="input-panel">
+      <textarea id="text-input" rows="20" placeholder="Paste your text here..."></textarea>
+    </div>
+    <div class="output-panel">
+      <div id="layouts-container"></div>
+    </div>
+  </div>
+  <script>
+    const layouts = {
+      "QWERTY": {
+        rows: [
+          ["Q","W","E","R","T","Y","U","I","O","P"],
+          ["A","S","D","F","G","H","J","K","L"],
+          ["Z","X","C","V","B","N","M"]
+        ]
+      },
+      "Colemak": {
+        rows: [
+          ["Q","W","F","P","G","J","L","U","Y"],
+          ["A","R","S","T","D","H","N","E","I","O"],
+          ["Z","X","C","V","B","K","M"]
+        ]
+      },
+      "Dvorak": {
+        rows: [
+          ["'", ",", ".", "P","Y","F","G","C","R","L"],
+          ["A","O","E","U","I","D","H","T","N","S"],
+          ["Q","J","K","X","B","M","W","V","Z"]
+        ]
+      },
+      "Colemak-SE": {
+        rows: [
+          ["Q","W","F","P","G","J","L","U","Y","Ö","Å"],
+          ["A","R","S","T","D","H","N","E","I","O","Ä"],
+          ["Z","X","C","V","B","K","M"]
+        ]
+      }
+    };
+
+    function getColor(count, max) {
+      // interpolate from light1 to bright red based on count ratio
+      if (max === 0) return '#ebdbb2';
+      const low = { r: 0xeb, g: 0xdb, b: 0xb2 };
+      const high = { r: 0xfb, g: 0x49, b: 0x34 };
+      const ratio = count / max;
+      const r = Math.round(low.r + ratio * (high.r - low.r));
+      const g = Math.round(low.g + ratio * (high.g - low.g));
+      const b = Math.round(low.b + ratio * (high.b - low.b));
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    function analyze() {
+      const text = document.getElementById("text-input").value.toLowerCase();
+      const counts = {};
+      for (const char of text) {
+        if ((char >= 'a' && char <= 'z') || char === 'ä' || char === 'ö' || char === 'å') {
+          counts[char] = (counts[char] || 0) + 1;
+        }
+      }
+      const maxCount = Math.max(0, ...Object.values(counts));
+      const totalCount = Object.values(counts).reduce((sum, v) => sum + v, 0);
+      const container = document.getElementById("layouts-container");
+      container.innerHTML = "";
+      for (const [name, layout] of Object.entries(layouts)) {
+        const section = document.createElement("div");
+        section.className = "layout";
+        const title = document.createElement("h2");
+        title.textContent = name;
+        section.appendChild(title);
+        // home row usage
+        const homeKeys = layout.rows[1] || [];
+        const homeCount = homeKeys.reduce((sum, k) => sum + (counts[k.toLowerCase()] || 0), 0);
+        const homePct = totalCount > 0 ? (homeCount / totalCount * 100).toFixed(2) : '0.00';
+        const info = document.createElement('p');
+        info.textContent = `Home row usage: ${homeCount} / ${totalCount} (${homePct}%)`;
+        section.appendChild(info);
+        const keyboard = document.createElement("div");
+        keyboard.className = "keyboard";
+        layout.rows.forEach((rowKeys, rowIndex) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          if (rowIndex === 1) row.classList.add("second-row");
+          if (rowIndex === 2) row.classList.add("third-row");
+          rowKeys.forEach(key => {
+            const count = counts[key.toLowerCase()] || 0;
+            const keyDiv = document.createElement("div");
+            keyDiv.className = "key";
+            keyDiv.style.backgroundColor = getColor(count, maxCount);
+            keyDiv.textContent = key;
+            const countSpan = document.createElement("div");
+            countSpan.className = "count";
+            countSpan.textContent = count;
+            keyDiv.appendChild(countSpan);
+            row.appendChild(keyDiv);
+          });
+          keyboard.appendChild(row);
+        });
+        section.appendChild(keyboard);
+        container.appendChild(section);
+      }
+    }
+
+    // live update: analyze on input
+    document.getElementById("text-input").addEventListener("input", analyze);
+  </script>
+</body>
+</html>
