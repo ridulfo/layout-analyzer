@@ -66,6 +66,9 @@ const LAYOUTS = {
 const FINGER_LABELS = ['L4', 'L3', 'L2', 'L1', 'R1', 'R2', 'R3', 'R4'];
 const FINGER_NAMES = ['LP', 'LR', 'LM', 'LI', 'RI', 'RM', 'RR', 'RP'];
 
+// Horizontal offsets per row to approximate physical key staggering (in key units).
+// The top and bottom letter rows (row 0 and row 2) are offset by 0.5 units relative to the home row (row 1).
+const ROW_OFFSETS = [0.5, 0, 0.5];
 // Utility functions
 function getKeyPosition(layout, key) {
   const upperKey = key.toUpperCase();
@@ -76,7 +79,9 @@ function getKeyPosition(layout, key) {
       colIndex = layout.rows[rowIndex].indexOf(lowerKey);
     }
     if (colIndex !== -1) {
-      return { row: rowIndex, col: colIndex };
+      // Apply horizontal row offset for staggering
+      const offset = ROW_OFFSETS[rowIndex] || 0;
+      return { row: rowIndex, col: colIndex + offset };
     }
   }
   return null;

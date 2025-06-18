@@ -72,19 +72,20 @@
       <details style="margin-top: 10px; font-size: 12px;">
         <summary style="cursor: pointer;">Finger Mapping Reference</summary>
         <div style="margin: 8px 0;">
-          <strong>Left Hand:</strong><br>
-          LP (Pinky): Q, A, Z<br>
-          LR (Ring): W, S, X<br>
-          LM (Middle): E, D, C<br>
-          LI (Index): R, T, F, G, V, B<br>
-          <br>
-          <strong>Right Hand:</strong><br>
-          RI (Index): Y, U, H, J, N, M<br>
-          RM (Middle): I, K<br>
-          RR (Ring): O, L<br>
-          RP (Pinky): P, ;
+          Left Hand: LP (Pinky) – Q, A, Z; LR (Ring) – W, S, X; LM (Middle) – E, D, C; LI (Index) – R, T, F, G, V, B.<br>
+          Right Hand: RI (Index) – Y, U, H, J, N, M; RM (Middle) – I, K; RR (Ring) – O, L; RP (Pinky) – P, ;.<br>
+          Finger assignments shown here are for QWERTY layout; other layouts use the same finger positions for different letters.
         </div>
-        <small><em>Mappings shown for QWERTY. Other layouts use same finger positions but different letters.</em></small>
+      </details>
+      <details style="margin-top: 10px; font-size: 12px;">
+        <summary style="cursor: pointer;">Distance Calculation Reference</summary>
+        <div style="margin: 8px 0;">
+          Distance is measured on a staggered grid where adjacent keys horizontally or vertically are 1 unit apart, and the top (row 0) and bottom (row 2) rows are offset by 0.5 units horizontally relative to the home row (row 1). For each non-home key press, compute the straight-line (Euclidean) distance to the finger’s home key:
+        </div>
+        <pre style="margin: 4px 0; background: var(--light1); padding: 4px; border: 1px solid var(--border);"><code>distance = sqrt((row2 - row1)^2 + (col2 - col1)^2)</code></pre>
+        <div style="margin:4px 0;">
+          These distances are summed per finger to give the total travel effort. Diagonal moves are longer than purely horizontal or vertical moves since both row and column differences contribute.
+        </div>
       </details>
     </div>
     <div class="output-panel">
